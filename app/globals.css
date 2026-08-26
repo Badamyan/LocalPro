@@ -32,3 +32,13 @@ main {
   width: min(1200px, calc(100% - 2rem));
   margin: 0 auto;
 }
+
+@layer components {
+  .dashboard-page {
+    min-height: 100vh;
+  }
+
+  .dashboard-shell {
+    color: var(--foreground);
+  }
+}

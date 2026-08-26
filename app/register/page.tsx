@@ -28,8 +28,9 @@ export default function RegisterPage() {
     setIsSubmitting(false);
 
     if (!response.ok || !result.success) {
-      const firstError = Object.values(result.error ?? {})?.[0]?.[0] ?? 'Unable to create account.';
-      setError(firstError as string);
+      const errors = result.error as Record<string, string[]> | undefined;
+      const firstError = errors ? Object.values(errors)[0]?.[0] : undefined;
+      setError(firstError ?? 'Unable to create account.');
       return;
     }
 
