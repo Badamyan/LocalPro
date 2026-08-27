@@ -6,6 +6,7 @@ const bookingInclude = {
   customer: { select: { id: true, name: true } },
   providerProfile: { select: { id: true, businessName: true } },
   serviceListing: { select: { id: true, title: true, price: true, priceType: true } },
+  review: { select: { id: true, rating: true, comment: true } },
 } satisfies Prisma.BookingInclude;
 
 export type BookingWithDetails = Prisma.BookingGetPayload<{ include: typeof bookingInclude }>;

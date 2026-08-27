@@ -108,12 +108,14 @@ model Booking {
   customer       User @relation(fields: [customerId], references: [id], onDelete: Cascade)
   providerProfile ProviderProfile @relation(fields: [providerProfileId], references: [id], onDelete: Cascade)
   serviceListing  ServiceListing @relation(fields: [serviceListingId], references: [id], onDelete: Cascade)
+  review          Review?
 
   @@map("bookings")
 }
 
 model Review {
   id               String   @id @default(cuid())
+  bookingId        String   @unique
   customerId       String
   providerProfileId String
   serviceListingId  String
@@ -121,6 +123,7 @@ model Review {
   comment          String?
   createdAt        DateTime @default(now())
 
+  booking          Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   customer         User @relation(fields: [customerId], references: [id], onDelete: Cascade)
   providerProfile  ProviderProfile @relation(fields: [providerProfileId], references: [id], onDelete: Cascade)
   serviceListing   ServiceListing @relation(fields: [serviceListingId], references: [id], onDelete: Cascade)

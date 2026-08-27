@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation';
 import { auth } from '@/auth';
 import { BookingForm } from '@/components/marketplace/booking-form';
 import { getPublishedListing } from '@/services/service-listing-service';
+import { getReviews, getServiceReviewSummary } from '@/services/review-service';
+import { ReviewList } from '@/components/marketplace/review-list';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,6 +20,7 @@ export default async function ServiceDetailPage({ params }: ServiceDetailProps) 
   const session = await auth();
 
   const provider = service.providerProfile;
+  const [summary, reviews] = await Promise.all([getServiceReviewSummary(service.id), getReviews({ serviceListingId: service.id })]);
 
   return (
     <main className="py-12">
@@ -30,6 +33,7 @@ export default async function ServiceDetailPage({ params }: ServiceDetailProps) 
             </div>
             <h1 className="mt-5 text-4xl font-bold text-slate-900">{service.title}</h1>
             <p className="mt-5 whitespace-pre-line leading-8 text-slate-600">{service.description}</p>
+            <div className="mt-6 flex items-center gap-2 text-sm"><span className="text-xl text-amber-500">★</span><strong>{summary.averageRating.toFixed(1)}</strong><span className="text-slate-500">({reviews.length} reviews)</span></div>
             <div className="mt-8 border-t border-slate-100 pt-6">
               <p className="text-sm text-slate-500">Pricing</p>
               <p className="mt-1 text-3xl font-bold text-slate-900">${service.price.toFixed(2)} <span className="text-sm font-medium text-slate-500">{priceLabels[service.priceType]}</span></p>
@@ -46,6 +50,7 @@ export default async function ServiceDetailPage({ params }: ServiceDetailProps) 
             {!session?.user ? <Link href="/login" className="mt-6 block text-sm font-semibold text-brand-300 hover:text-brand-200">Log in to request this service</Link> : null}
           </aside>
         </div>
+        <section className="mt-8 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm"><h2 className="text-2xl font-bold text-slate-900">Reviews for {service.title}</h2><ReviewList reviews={reviews} /></section>
       </div>
     </main>
   );
