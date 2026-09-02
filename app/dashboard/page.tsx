@@ -3,8 +3,10 @@ import { auth } from '@/auth';
 import { LogoutButton } from '@/components/auth/logout-button';
 import { BookingActions } from '@/components/marketplace/booking-actions';
 import { ReviewForm } from '@/components/marketplace/review-form';
+import { NotificationsList } from '@/components/marketplace/notification-list';
 import { prisma } from '@/lib/prisma';
 import { getBookings } from '@/services/booking-service';
+import { getNotifications } from '@/services/notification-service';
 import { getProviderReviewSummary } from '@/services/review-service';
 
 export default async function DashboardPage() {
@@ -16,6 +18,7 @@ export default async function DashboardPage() {
 
   if (session.user.role === 'ADMIN') redirect('/');
   const bookings = await getBookings(session.user.id, session.user.role);
+  const notifications = await getNotifications(session.user.id);
   const providerProfile = session.user.role === 'PROVIDER'
     ? await prisma.providerProfile.findUnique({ where: { userId: session.user.id }, include: { services: { orderBy: { updatedAt: 'desc' } } } })
     : null;
@@ -52,6 +55,7 @@ export default async function DashboardPage() {
             {bookings.length === 0 ? <div className="rounded-2xl border border-dashed border-slate-300 p-8 text-center text-slate-600">No bookings yet.</div> : null}
           </div>
         </section>
+        <NotificationsList initialNotifications={notifications} />
         {providerProfile ? <section className="mt-10 border-t border-slate-200 pt-8"><p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-600">Provider profile</p><h2 className="mt-2 text-2xl font-bold text-slate-900">{providerProfile.businessName}</h2><p className="mt-2 text-slate-600">{providerProfile.services.length} service listings · <a href="/provider/services" className="font-semibold text-brand-700">Manage listings</a></p><p className="mt-4 text-lg font-semibold text-slate-900"><span className="text-amber-500">★</span> {providerSummary?.averageRating.toFixed(1)} <span className="text-sm font-normal text-slate-500">from {providerSummary?.reviewCount} review{providerSummary?.reviewCount === 1 ? '' : 's'}</span></p></section> : null}
       </div>
     </main>
