@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { auth } from '@/auth';
 import { BookingForm } from '@/components/marketplace/booking-form';
+import { FavoriteButton } from '@/components/marketplace/favorite-button';
 import { getPublishedListing } from '@/services/service-listing-service';
 import { getReviews, getServiceReviewSummary } from '@/services/review-service';
 import { ReviewList } from '@/components/marketplace/review-list';
@@ -40,8 +41,13 @@ export default async function ServiceDetailPage({ params }: ServiceDetailProps) 
             </div>
           </article>
           <aside className="h-fit rounded-3xl border border-slate-200 bg-slate-900 p-7 text-white shadow-sm">
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-brand-300">Provided by</p>
-            <h2 className="mt-4 text-2xl font-bold">{provider.businessName}</h2>
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.16em] text-brand-300">Provided by</p>
+                <h2 className="mt-4 text-2xl font-bold">{provider.businessName}</h2>
+              </div>
+              {session?.user.role === 'CUSTOMER' && <FavoriteButton serviceId={service.id} />}
+            </div>
             {provider.tagline ? <p className="mt-2 text-slate-300">{provider.tagline}</p> : null}
             {provider.bio ? <p className="mt-5 leading-7 text-slate-300">{provider.bio}</p> : null}
             {provider.location ? <p className="mt-5 text-sm text-slate-400">{provider.location}</p> : null}

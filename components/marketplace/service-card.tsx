@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { FavoriteButton } from './favorite-button';
 
 type ServiceCardProps = {
   service: {
@@ -28,9 +29,12 @@ const locationLabels: Record<string, string> = {
 export function ServiceCard({ service }: ServiceCardProps) {
   return (
     <article className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex items-center justify-between gap-3 text-xs font-semibold uppercase tracking-wide text-brand-700">
-        <span>{service.category.name}</span>
-        <span className="text-slate-500">{locationLabels[service.locationType]}</span>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-wide text-brand-700">
+          <span>{service.category.name}</span>
+          <span className="text-slate-500">{locationLabels[service.locationType]}</span>
+        </div>
+        <FavoriteButton serviceId={service.id} />
       </div>
       <h2 className="mt-4 text-xl font-bold text-slate-900">{service.title}</h2>
       <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-600">{service.description}</p>
