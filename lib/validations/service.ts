@@ -16,6 +16,10 @@ export const serviceQuerySchema = z.object({
   category: z.string().trim().optional(),
   priceType: z.enum(['HOURLY', 'FIXED', 'CUSTOM']).optional(),
   locationType: z.enum(['ONSITE', 'REMOTE', 'BOTH']).optional(),
+  minPrice: z.coerce.number().nonnegative().optional(),
+  maxPrice: z.coerce.number().nonnegative().optional(),
+  minRating: z.coerce.number().min(1).max(5).optional(),
+  sort: z.enum(['newest', 'price_asc', 'price_desc', 'rating']).optional(),
 });
 
 export type ServiceListingInput = z.infer<typeof serviceListingSchema>;

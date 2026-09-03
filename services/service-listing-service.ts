@@ -20,11 +20,19 @@ export const publicListingInclude = {
   },
 } satisfies Prisma.ServiceListingInclude;
 
+type ServiceWithRating = Prisma.ServiceListingGetPayload<{
+  include: typeof publicListingInclude;
+}> & { averageRating?: number; reviewCount?: number };
+
 export async function getPublishedListings(filters: {
   q?: string;
   category?: string;
   priceType?: 'HOURLY' | 'FIXED' | 'CUSTOM';
   locationType?: 'ONSITE' | 'REMOTE' | 'BOTH';
+  minPrice?: number;
+  maxPrice?: number;
+  minRating?: number;
+  sort?: 'newest' | 'price_asc' | 'price_desc' | 'rating';
 }) {
   const search = filters.q
     ? {
@@ -40,7 +48,8 @@ export async function getPublishedListings(filters: {
       }
     : {};
 
-  return prisma.serviceListing.findMany({
+  // Base query with filters
+  let services = await prisma.serviceListing.findMany({
     where: {
       status: ListingStatus.PUBLISHED,
       ...search,
@@ -49,10 +58,64 @@ export async function getPublishedListings(filters: {
         : {}),
       ...(filters.priceType ? { priceType: filters.priceType } : {}),
       ...(filters.locationType ? { locationType: filters.locationType } : {}),
+      ...(filters.minPrice !== undefined || filters.maxPrice !== undefined
+        ? {
+            AND: [
+              filters.minPrice !== undefined ? { price: { gte: filters.minPrice } } : {},
+              filters.maxPrice !== undefined ? { price: { lte: filters.maxPrice } } : {},
+            ].filter((x) => Object.keys(x).length > 0),
+          }
+        : {}),
     },
     include: publicListingInclude,
-    orderBy: { createdAt: 'desc' },
   });
+
+  // If we need rating filtering or rating-based sorting, fetch reviews
+  if (filters.minRating || filters.sort === 'rating') {
+    const serviceIds = services.map((s) => s.id);
+    if (serviceIds.length > 0) {
+      const reviews = await prisma.review.groupBy({
+        by: ['serviceListingId'],
+        where: { serviceListingId: { in: serviceIds } },
+        _avg: { rating: true },
+        _count: { id: true },
+      });
+
+      const reviewMap = new Map(
+        reviews.map((r) => [r.serviceListingId, { avg: r._avg.rating ?? 0, count: r._count.id }]),
+      );
+
+      // Add ratings to services
+      const servicesWithRatings: ServiceWithRating[] = services.map((s) => ({
+        ...s,
+        averageRating: reviewMap.get(s.id)?.avg ?? 0,
+        reviewCount: reviewMap.get(s.id)?.count ?? 0,
+      }));
+
+      // Filter by minimum rating
+      const minRating = filters.minRating;
+      if (minRating !== undefined && minRating > 0) {
+        services = servicesWithRatings.filter((s) => (s.averageRating ?? 0) >= minRating) as any;
+      } else {
+        services = servicesWithRatings as any;
+      }
+    }
+  }
+
+  // Apply sorting
+  if (filters.sort === 'price_asc') {
+    services.sort((a, b) => a.price - b.price);
+  } else if (filters.sort === 'price_desc') {
+    services.sort((a, b) => b.price - a.price);
+  } else if (filters.sort === 'rating') {
+    const servicesWithRatings = services as ServiceWithRating[];
+    servicesWithRatings.sort((a, b) => (b.averageRating ?? 0) - (a.averageRating ?? 0));
+  } else {
+    // newest (default)
+    services.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  return services;
 }
 
 export async function getPublishedListing(id: string) {

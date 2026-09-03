@@ -11,6 +11,10 @@ export async function GET(request: Request) {
       category: searchParams.get('category') || undefined,
       priceType: searchParams.get('priceType') || undefined,
       locationType: searchParams.get('locationType') || undefined,
+      minPrice: searchParams.get('minPrice') || undefined,
+      maxPrice: searchParams.get('maxPrice') || undefined,
+      minRating: searchParams.get('minRating') || undefined,
+      sort: searchParams.get('sort') || undefined,
     });
     const data = await getPublishedListings(filters);
 

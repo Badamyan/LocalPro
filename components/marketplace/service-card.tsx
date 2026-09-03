@@ -11,6 +11,8 @@ type ServiceCardProps = {
     locationType: string;
     category: { name: string };
     providerProfile: { id: string; businessName: string; isVerified: boolean };
+    averageRating?: number;
+    reviewCount?: number;
   };
 };
 
@@ -38,6 +40,16 @@ export function ServiceCard({ service }: ServiceCardProps) {
       </div>
       <h2 className="mt-4 text-xl font-bold text-slate-900">{service.title}</h2>
       <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-600">{service.description}</p>
+
+      {/* Rating display */}
+      {service.averageRating !== undefined && service.reviewCount !== undefined && (
+        <div className="mt-3 flex items-center gap-1 text-sm">
+          <span className="text-amber-500">★</span>
+          <strong className="text-slate-900">{service.averageRating.toFixed(1)}</strong>
+          <span className="text-slate-500">({service.reviewCount} {service.reviewCount === 1 ? 'review' : 'reviews'})</span>
+        </div>
+      )}
+
       <div className="mt-5 flex items-end justify-between gap-4">
         <div>
           <p className="text-2xl font-bold text-slate-900">${service.price.toFixed(2)}</p>
