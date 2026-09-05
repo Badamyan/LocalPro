@@ -1,6 +1,14 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 
 export default function HomePage() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const searchHref = searchTerm.trim()
+    ? `/services?q=${encodeURIComponent(searchTerm.trim())}`
+    : "/services";
+
   return (
     <main className="pb-16">
       <section className="border-b border-slate-200 bg-gradient-to-br from-brand-50 via-white to-slate-50">
@@ -22,10 +30,12 @@ export default function HomePage() {
                 id="service-search"
                 type="search"
                 placeholder="What service do you need?"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
                 className="min-w-0 flex-1 rounded-xl border-0 px-4 py-3 text-slate-900 outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500"
               />
               <Link
-                href="/services"
+                href={searchHref}
                 className="mt-3 inline-flex min-h-12 items-center justify-center rounded-xl bg-brand-600 px-6 py-3 font-semibold text-white transition hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 sm:mt-0"
               >
                 Search services
