@@ -52,7 +52,11 @@ export default async function ServiceDetailPage({ params }: ServiceDetailProps) 
             {provider.bio ? <p className="mt-5 leading-7 text-slate-300">{provider.bio}</p> : null}
             {provider.location ? <p className="mt-5 text-sm text-slate-400">{provider.location}</p> : null}
             <Link href={`/providers/${provider.id}`} className="mt-6 inline-flex rounded-xl bg-brand-400 px-4 py-3 font-semibold text-slate-950 hover:bg-brand-300">View provider profile</Link>
-            {session?.user.role === 'CUSTOMER' ? <BookingForm serviceId={service.id} price={service.price} priceType={service.priceType} durationMinutes={service.durationMinutes} /> : null}
+            {session?.user.role === 'CUSTOMER' ? (
+              <section aria-label="Booking request">
+                <BookingForm serviceId={service.id} price={service.price} priceType={service.priceType} durationMinutes={service.durationMinutes} />
+              </section>
+            ) : null}
             {!session?.user ? <Link href="/login" className="mt-6 block text-sm font-semibold text-brand-300 hover:text-brand-200">Log in to request this service</Link> : null}
           </aside>
         </div>
