@@ -1,6 +1,8 @@
 import Link from 'next/link';
+import { auth } from '@/auth';
 import { ServiceCard } from '@/components/marketplace/service-card';
 import { prisma } from '@/lib/prisma';
+import { getFavorites } from '@/services/favorite-service';
 import { getPublishedListings } from '@/services/service-listing-service';
 
 type ServicesPageProps = {
@@ -23,7 +25,8 @@ const ratingOptions = ['1', '2', '3', '4', '5'] as const;
 
 export default async function ServicesPage({ searchParams }: ServicesPageProps) {
   const params = await searchParams;
-  const [services, categories] = await Promise.all([
+  const session = await auth();
+  const [services, categories, favorites] = await Promise.all([
     getPublishedListings({
       q: params.q,
       category: params.category,
@@ -35,7 +38,9 @@ export default async function ServicesPage({ searchParams }: ServicesPageProps) 
       sort: sortOptions.includes(params.sort as (typeof sortOptions)[number]) ? (params.sort as (typeof sortOptions)[number]) : undefined,
     }),
     prisma.serviceCategory.findMany({ orderBy: { name: 'asc' } }),
+    session?.user.role === 'CUSTOMER' ? getFavorites(session.user.id) : Promise.resolve([]),
   ]);
+  const favoriteIds = new Set(favorites.map((favorite) => favorite.serviceListingId));
 
   // Build query string for clear filters
   const hasActiveFilters =
@@ -183,7 +188,12 @@ export default async function ServicesPage({ searchParams }: ServicesPageProps) 
         {/* Service grid */}
         <div className="mt-4 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {services.map((service) => (
-            <ServiceCard key={service.id} service={service} />
+            <ServiceCard
+              key={service.id}
+              service={service}
+              canFavorite={session?.user.role === 'CUSTOMER'}
+              initialIsFavorite={favoriteIds.has(service.id)}
+            />
           ))}
         </div>
 

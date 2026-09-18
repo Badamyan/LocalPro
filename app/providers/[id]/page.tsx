@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { ServiceCard } from '@/components/marketplace/service-card';
+import { getFavorites } from '@/services/favorite-service';
 import { ReviewList } from '@/components/marketplace/review-list';
 import { getProviderReviewSummary, getReviews } from '@/services/review-service';
 
@@ -9,6 +11,7 @@ import { getProviderReviewSummary, getReviews } from '@/services/review-service'
 
 export default async function ProviderPage({ params }: ProviderPageProps) {
   const { id } = await params;
+  const session = await auth();
   const provider = await prisma.providerProfile.findUnique({
     where: { id },
     include: {
@@ -21,7 +24,12 @@ export default async function ProviderPage({ params }: ProviderPageProps) {
   });
 
   if (!provider) notFound();
-  const [summary, reviews] = await Promise.all([getProviderReviewSummary(provider.id), getReviews({ providerProfileId: provider.id })]);
+  const [summary, reviews, favorites] = await Promise.all([
+    getProviderReviewSummary(provider.id),
+    getReviews({ providerProfileId: provider.id }),
+    session?.user.role === 'CUSTOMER' ? getFavorites(session.user.id) : Promise.resolve([]),
+  ]);
+  const favoriteIds = new Set(favorites.map((favorite) => favorite.serviceListingId));
 
   return (
     <main className="py-12">
@@ -45,7 +53,14 @@ export default async function ProviderPage({ params }: ProviderPageProps) {
         <section className="mt-10 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm"><h2 className="text-2xl font-bold text-slate-900">Customer reviews</h2><ReviewList reviews={reviews} /></section>
         <div className="mt-10 flex items-end justify-between"><div><p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-600">Published services</p><h2 className="mt-2 text-3xl font-bold text-slate-900">What they offer</h2></div><span className="text-sm text-slate-500">{provider.services.length} services</span></div>
         <div className="mt-5 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {provider.services.map((service) => <ServiceCard key={service.id} service={service} />)}
+          {provider.services.map((service) => (
+            <ServiceCard
+              key={service.id}
+              service={service}
+              canFavorite={session?.user.role === 'CUSTOMER'}
+              initialIsFavorite={favoriteIds.has(service.id)}
+            />
+          ))}
         </div>
         {provider.services.length === 0 ? <div className="mt-5 rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-600">This provider has no published services yet.</div> : null}
       </div>
