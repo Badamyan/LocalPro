@@ -21,7 +21,6 @@ type ServicesPageProps = {
 const priceTypes = ['HOURLY', 'FIXED', 'CUSTOM'] as const;
 const locationTypes = ['ONSITE', 'REMOTE', 'BOTH'] as const;
 const sortOptions = ['newest', 'price_asc', 'price_desc', 'rating'] as const;
-const ratingOptions = ['1', '2', '3', '4', '5'] as const;
 
 export default async function ServicesPage({ searchParams }: ServicesPageProps) {
   const params = await searchParams;
